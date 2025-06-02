@@ -73,12 +73,16 @@ export enum DeliveryWays {
 
 
 export enum Categories {
-    
+    vehicles = 'vehicles',             // Транспорт (грузовики, тягачи)
+    trailers = 'trailers',             // Прицепы
+    parts = 'parts',                   // Запчасти
+    services = 'services',             // Услуги (ремонт, перевозка)
+    tools = 'tools',                   // Инструменты
+    warehousing = 'warehousing',       // Склад/аренда места
+    containers = 'containers',         // Контейнеры
+    other = 'other'
 }
 
-export enum Subcategories {
-    
-}
 
 export enum DeliveryType {
     post_office ="post_office",

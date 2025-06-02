@@ -1,51 +1,52 @@
-import { IsNumber, IsOptional, IsString } from "class-validator";
-import { Categories, DeliveryWays, Location, PaymentTypes, Subcategories, user } from "../../Common/newTypes.mjs";
+import { IsArray, IsEnum, IsNumber, IsOptional, IsString } from "class-validator";
+import { Categories, DeliveryWays, Location, PaymentTypes, user } from "../../Common/newTypes.mjs";
 import { ApiProperty } from "@nestjs/swagger";
+import { Type } from "class-transformer";
 
 export class AddItemDto {
 
-    @ApiProperty({ example: 'Trailer Lev', description: 'item name' })
+    @ApiProperty({ example: 'Trailer Lev', description: 'Item name' })
     @IsString()
     title!: string;
 
-    @ApiProperty({ example: 'length: 1m', description: 'item description' })
+    @ApiProperty({ example: 'Length: 1m', description: 'Item description' })
     @IsString()
     content!: string;
 
-    @ApiProperty({ example: 2, description: 'quantity available (count)' })
+    @ApiProperty({ example: 2, description: 'Quantity available (count)' })
     @IsNumber()
     amount!: number;
 
-    @ApiProperty({ example: 2, description: 'price per one thing' })
+    @ApiProperty({ example: 2, description: 'Price per unit', required: false })
     @IsOptional()
     @IsNumber()
     price?: number;
 
-    @ApiProperty({ example: "UAH", description: 'currency' })
+    @ApiProperty({ example: 'UAH', description: 'Currency code (e.g., UAH, USD)', required: false })
     @IsOptional()
     @IsString()
     currency?: string;
 
-    @ApiProperty({ type: Location, description: 'item location' })
+    @ApiProperty({ type: Location, description: 'Item location' })
+    @Type(() => Location)
     location!: Location;
 
-    @ApiProperty({ example: PaymentTypes.cashless, description: 'payment types', enum: PaymentTypes })
-    @IsString()
+    @ApiProperty({ example: PaymentTypes.cashless, enum: PaymentTypes, description: 'Payment type' })
+    @IsEnum(PaymentTypes)
     paymentType!: PaymentTypes;
 
-    @ApiProperty({ example: [ DeliveryWays.ups ], description: 'delivery ways', isArray: true, enum: DeliveryWays })
-    deliveryWays!: Array<DeliveryWays>;
+    @ApiProperty({ example: [DeliveryWays.ups], isArray: true, enum: DeliveryWays, description: 'Delivery methods' })
+    @IsArray()
+    @IsEnum(DeliveryWays, { each: true })
+    deliveryWays!: DeliveryWays[];
 
-    @ApiProperty({ example: Categories.vehicles, description: 'category', enum: Categories })
-    @IsString()
-    category!: string;
+    @ApiProperty({ example: Categories.trailers, enum: Categories, description: 'Item category' })
+    @IsEnum(Categories)
+    category!: Categories;
 
-    @ApiProperty({ example: Subcategories.cars, description: 'subcategory', enum: Subcategories })
-    @IsString()
-    subcategory!: string;
+    @ApiProperty({ example: { brand: 'BMW' }, description: 'Custom category-specific filter data' })
+    filter!: Record<string, any>; 
 
-    @ApiProperty({ example: { brand: "BMW" }, description: 'all info from category filter' })
-    filter!: JSON;
-    
-    user!: user;
+    @IsOptional()
+    user!: user; 
 }

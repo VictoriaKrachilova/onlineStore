@@ -8,7 +8,7 @@ import { RegisterDto } from './dto/register-user.dto.mjs';
 import { sendEmailActivateLink, sendRegisterActivateLink, sendRestorePasswordLink } from '../Common/Notify/mailsToUsers.mjs';
 import { EmailDto } from './dto/email.dto.mjs';
 import { UpdateProfileDto } from './dto/update-profile.dto.mjs';
-import { updateContactPhonesDto } from './dto/update-contact-phones.dto.mjs';
+import { UpdateContactPhonesDto } from './dto/update-contact-phones.dto.mjs';
 import { EditEmailDto } from './dto/edit-email.dto.mjs';
 import { AddReviewDto } from './dto/add-review.dto.mjs';
 import { UserReview } from './models/user-review.model.mjs';
@@ -23,9 +23,9 @@ export class UserService {
                 ) {}
 
     async register(dto: RegisterDto) {
-        const country = (await this.countriesRepository.findOne({ where: { alpha2: dto.country }}))?.dataValues;
+        const country = (await this.countriesRepository.findOne({ where: { alpha2: dto.country }}))?.toJSON();
         if (!country) throw new HttpException('Country not found', HttpStatus.NOT_FOUND);
-        const user = (await this.userRepository.create({ ...dto, countryId: country.id, contactPhones: dto.phone ? [ dto.phone ] : [] })).dataValues;
+        const user = (await this.userRepository.create({ ...dto, countryId: country.id, contactPhones: dto.phone ? [ dto.phone ] : [] })).toJSON();
         const token = makeToken();
         await redisSetEx(token, { userId: user.id });
         if (!dto.googleId) await sendRegisterActivateLink({ email: user.email, lang: country.languages[0], token, country: country.alpha2 });
@@ -38,15 +38,15 @@ export class UserService {
             attributes: [ "id" ],
             include: [ { model: Countries, attributes: [ "languages" ] } ],
             where: { email: data.email, isVisible: true, isBanned: false }
-        }))?.dataValues;
+        }))?.toJSON();
         if (!user) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
 
         await redisSetEx(token, { userId: user.id });
         const args = {
             email: data.email,
-            lang: user.country.dataValues.languages[0],
+            lang: user.country.languages[0],
             token,
-            country: user.country.dataValues.alpha2,
+            country: user.country.alpha2,
         };
         await sendEmailActivateLink(args);
         return { status: "ok" };
@@ -58,33 +58,33 @@ export class UserService {
             attributes: [ "id" ],
             include: [ { model: Countries, attributes: [ "languages", "alpha2" ] } ],
             where: { email: data.email, isVisible: true, isBanned: false }
-        }))?.dataValues;
+        }))?.toJSON();
         if (!user) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
 
         await redisSetEx(token, { userId: user.id });
         const args = {
             email: data.email,
-            lang: user.country.dataValues.languages[0],
+            lang: user.country.languages[0],
             token,
-            country: user.country.dataValues.alpha2,
+            country: user.country.alpha2,
         };
         await sendRestorePasswordLink(args);
         return { status: "ok" };
     }
 
     async getUserByEmail(email: string) {
-        const user = (await this.userRepository.findOne({ where: { email, isVisible: true }, include: { all: true } }))?.dataValues;
+        const user = (await this.userRepository.findOne({ where: { email, isVisible: true }, include: { all: true } }))?.toJSON();
         return user;
     }
 
     async getCountryAndCurrencyById(id: number) {
-        const country = (await this.countriesRepository.findByPk(id))?.dataValues;
+        const country = (await this.countriesRepository.findByPk(id))?.toJSON();
         if (!country) throw new HttpException('Country not found', HttpStatus.NOT_FOUND);
         return { country : country.alpha2, currency: country.currency };
     }
 
     async getUserByGoogleId(googleId: string, email : string | null) {
-        let user = (await this.userRepository.findOne({ where: { googleId, isVisible: true }, include: {all: true} }))?.dataValues;
+        let user = (await this.userRepository.findOne({ where: { googleId, isVisible: true }, include: {all: true} }))?.toJSON();
         if (!user) {
             if (!email) throw new HttpException('Incorrect google token', HttpStatus.BAD_REQUEST);
             user = await this.getUserByEmail(email);
@@ -100,7 +100,7 @@ export class UserService {
     }
 
     async getUserById(userId: number) {
-        const user = (await this.userRepository.findByPk(userId))?.dataValues;
+        const user = (await this.userRepository.findByPk(userId))?.toJSON();
         if (!user) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
         return user;
     }
@@ -108,7 +108,7 @@ export class UserService {
     async confirmEmail (token : string) {
         const tokenData = await redisGet(token);
         if (!tokenData) throw new HttpException('Token expired', HttpStatus.BAD_REQUEST);
-        const user = (await this.userRepository.findOne({ where: { id: tokenData.userId, isVisible: true }, include: { all: true } }))?.dataValues;
+        const user = (await this.userRepository.findOne({ where: { id: tokenData.userId, isVisible: true }, include: { all: true } }))?.toJSON();
         if (!user) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
         await this.userRepository.update({ isActivate: true }, { where: { id: user.id } });
         return user;
@@ -127,7 +127,7 @@ export class UserService {
     }
 
     async updateProfile(data : UpdateProfileDto) {
-        const countryId = (await this.countriesRepository.findOne({ where: { alpha2: data.country }, include: { all: true } }))?.dataValues?.id;
+        const countryId = (await this.countriesRepository.findOne({ where: { alpha2: data.country }, include: { all: true } }))?.toJSON()?.id;
         if (!countryId) throw new HttpException('Country not found', HttpStatus.NOT_FOUND); 
         const [ updatedRows ] = await this.userRepository.update({
             name: data.name,
@@ -150,14 +150,14 @@ export class UserService {
                     attributes: [ "alpha2", "currency" ]
                 }
             ],
-        }))?.dataValues;
+        }))?.toJSON();
         if (!user) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
-        user.currency = user.country.dataValues.currency;
-        user.country = user.country.dataValues.alpha2;
+        user.currency = user.country.currency;
+        user.country = user.country.alpha2;
         return user;
     }
 
-    async updateContactPhones(data : updateContactPhonesDto) {
+    async updateContactPhones(data : UpdateContactPhonesDto) {
         if (data.contactPhones.length === 0) throw new HttpException('Must have at least one phone', HttpStatus.NOT_FOUND);
         const [ updatedRows ] = await this.userRepository.update({ contactPhones: data.contactPhones.map(v => v.replace(/[^0-9]/g, '')) }, { where: { id: data.user.id } });
         if (!updatedRows) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
@@ -165,12 +165,12 @@ export class UserService {
     }
 
     async editEmail(data: EditEmailDto) {
-        const user = (await this.userRepository.findOne({ where: { id: data.user.id, isVisible: true }, include: { all: true } }))?.dataValues;
+        const user = (await this.userRepository.findOne({ where: { id: data.user.id, isVisible: true }, include: { all: true } }))?.toJSON();
         if (!user) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
         await this.userRepository.update({ email: data.email, isActivate: false }, { where: { id: data.user.id } });
         const token = makeToken();
         await redisSetEx(token, { userId: user.id });
-        await sendEmailActivateLink({ email: user.email, lang: user.country.dataValues.languages[0], token, country: user.country.dataValues.alpha2 });
+        await sendEmailActivateLink({ email: user.email, lang: user.country.languages[0], token, country: user.country.alpha2 });
         return { status: "ok" };
     }
 
@@ -194,19 +194,19 @@ export class UserService {
             where: { recipientId: userId || authUser, isVisible: true },
             order: [ ['created', 'DESC'] ]
         })).map(v => {
-            let result : any = v.dataValues;
-            result.user = result.author.dataValues;
+            let result : any = v.toJSON();
+            result.user = result.author;
             delete result.author;
             return result;
         });
         return result;
     }
 
-    async editReview(data: EditReviewDto) {
+    async editReview(data: EditReviewDto, commentId: number) {
         if (data.rating < 1 || data.rating > 5) throw new HttpException('Invalid rating', HttpStatus.BAD_REQUEST);
-        const [ updatedRows ] = await this.reviewRepository.update({ comment: data.comment, rating: data.rating }, { where: { id: data.commentId, authorId: data.user.id } });
+        const [ updatedRows ] = await this.reviewRepository.update({ comment: data.comment, rating: data.rating }, { where: { id: commentId, authorId: data.user.id } });
         if (!updatedRows) throw new HttpException('Review not found', HttpStatus.NOT_FOUND);
-        await this.recalculateUserRating(data.commentId);
+        await this.recalculateUserRating(commentId);
         return { status: "ok" };
     }
 
@@ -217,17 +217,17 @@ export class UserService {
         return { status: "ok" };
     }
 
-    async updateReviewReply(data: ReplyToReviewDto) {
+    async updateReviewReply(data: ReplyToReviewDto, commentId: number) {
         const [ updatedRows ] = await this.reviewRepository.update({ 
             reply: data.reply,
             modifiedReplyTimestamp: data.reply ? Date.now() : 0,
-        }, { where: { id: data.commentId, recipientId: data.user.id } });
+        }, { where: { id: commentId, recipientId: data.user.id } });
         if (!updatedRows) throw new HttpException('Review not found', HttpStatus.NOT_FOUND);
         return { status: "ok" };
     }
 
     private async recalculateUserRating(commentId: number) {
-        const userId = (await this.reviewRepository.findByPk(commentId))?.dataValues.recipientId;
+        const userId = (await this.reviewRepository.findByPk(commentId))?.toJSON()?.recipientId;
         if (!userId) return null;
         const comments = (await this.reviewRepository.findAll({
             attributes: [ "rating" ],

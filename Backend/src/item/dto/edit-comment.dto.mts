@@ -5,10 +5,6 @@ import { Min, Max, IsString, IsOptional } from "class-validator";
 
 export class EditCommentDto {
 
-    @ApiProperty({ example: 1, description: 'Comment ID' })
-    commentId!: number;
-
-
     @ApiProperty({ example: "lies, deceit and provocation", description: 'Comment for rating' })
     @IsOptional()
     @IsString()

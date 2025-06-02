@@ -1,6 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IsString, Length } from "class-validator";
-import { user } from "src/Common/newTypes.mjs";
+import { user } from "../../Common/newTypes.mjs";
 
 export class ChangePasswordDto {
 

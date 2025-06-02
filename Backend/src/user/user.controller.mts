@@ -1,120 +1,110 @@
-import { Body, Controller, Delete, Get, Param, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
 import { UserService } from './user.service.mjs';
 import { ApiOperation, ApiResponse, ApiTags, ApiBearerAuth, ApiNotFoundResponse, ApiBadRequestResponse } from "@nestjs/swagger";
 import { EmailDto } from './dto/email.dto.mjs';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard.mjs';
-// import { ReviewInfo, GetProfileInfo, IdResponse } from '../Common/newTypesForDoc.mjs';
 import { UpdateProfileDto } from './dto/update-profile.dto.mjs';
-import { updateContactPhonesDto } from './dto/update-contact-phones.dto.mjs';
+import { UpdateContactPhonesDto } from './dto/update-contact-phones.dto.mjs';
 import { EditEmailDto } from './dto/edit-email.dto.mjs';
 import { AddReviewDto } from './dto/add-review.dto.mjs';
 import { EditReviewDto } from './dto/edit-review.dto.mjs';
 import { ReplyToReviewDto } from './dto/reply-to-review.dto.mjs';
-import { RequestWithUser } from 'src/Common/newTypes.mjs';
+import { RequestWithUser } from '../Common/newTypes.mjs';
 
 @ApiTags("User")
-@Controller('user')
+@Controller("user")
 export class UserController {
-    constructor(private userService: UserService) {}
+    constructor(private readonly userService: UserService) {}
 
-    @ApiOperation({ summary: 'resent activate mail' })
-    @Post('/resendActivateEmail')
-    resendActivateEmail(@Body() data: EmailDto) {
-        return this.userService.resendActivateEmail(data);
-    }
-    
-    @ApiOperation({ summary: 'Reset password' })
-    @Post('/resetPassword')
-    resetPassword(@Body() data: EmailDto) {
-        return this.userService.resetPassword(data);
+    @Post("resend-activate-email")
+    @ApiOperation({ summary: "Resend activation email" })
+    resendActivateEmail(@Body() dto: EmailDto) {
+        return this.userService.resendActivateEmail(dto);
     }
 
-    @ApiOperation({ summary: 'Get user`s profile' })
-    // @ApiResponse({ status: 201, type: GetProfileInfo })
-    @ApiNotFoundResponse({ description: 'User not found' })
+    @Post("reset-password")
+    @ApiOperation({ summary: "Reset password" })
+    resetPassword(@Body() dto: EmailDto) {
+        return this.userService.resetPassword(dto);
+    }
+
+    @Get("profile")
     @UseGuards(JwtAuthGuard)
     @ApiBearerAuth()
-    @Get('/getProfile/:userId')
-    getProfile(@Param('userId') userId : number) {
+    @ApiOperation({ summary: "Get user's profile" })
+    @ApiNotFoundResponse({ description: "User not found" })
+    getProfile(@Param("userId") userId: number) {
         return this.userService.getProfile(userId);
     }
 
-
-    @ApiOperation({ summary: 'Change user`s profile (if the field has not changed, send the old value)' })
-    @ApiNotFoundResponse({ description: 'User not found' })
-    @ApiResponse({ status: 201 })
+    @Patch("profile")
     @UseGuards(JwtAuthGuard)
     @ApiBearerAuth()
-    @Post('/updateProfile')
-    updateProfile(@Body() data: UpdateProfileDto) {
-        return this.userService.updateProfile(data);
+    @ApiOperation({ summary: "Update user's profile" })
+    @ApiNotFoundResponse({ description: "User not found" })
+    @ApiResponse({ status: 200 })
+    updateProfile(@Body() dto: UpdateProfileDto) {
+        return this.userService.updateProfile(dto);
     }
 
-    @ApiOperation({ summary: 'Add contact phone' })
-    @ApiNotFoundResponse({ description: 'User not found' })
+    @Patch("contact-phones")
     @UseGuards(JwtAuthGuard)
     @ApiBearerAuth()
-    @Post('/updateContactPhones')
-    updateContactPhones(@Body() data: updateContactPhonesDto) {
-        return this.userService.updateContactPhones(data);
+    @ApiOperation({ summary: "Update contact phones" })
+    @ApiNotFoundResponse({ description: "User not found" })
+    updateContactPhones(@Body() dto: UpdateContactPhonesDto) {
+        return this.userService.updateContactPhones(dto);
     }
 
-    @ApiOperation({ summary: 'Change user`s e-mail' })
-    @ApiNotFoundResponse({ description: 'User not found' })
+    @Patch("email")
     @UseGuards(JwtAuthGuard)
     @ApiBearerAuth()
-    @Post('/editEmail')
-    editEmail(@Body() data: EditEmailDto) {
-        return this.userService.editEmail(data);
+    @ApiOperation({ summary: "Change email" })
+    @ApiNotFoundResponse({ description: "User not found" })
+    editEmail(@Body() dto: EditEmailDto) {
+        return this.userService.editEmail(dto);
     }
 
-    @ApiOperation({ summary: 'Left a comment' })
+    @Post("reviews")
     @UseGuards(JwtAuthGuard)
     @ApiBearerAuth()
-    // @ApiResponse({ status: 201, type: IdResponse })
-    @Post('/addReview')
-    addReview(@Body() data: AddReviewDto) {
-        return this.userService.addReview(data);
+    @ApiOperation({ summary: "Add a review" })
+    addReview(@Body() dto: AddReviewDto) {
+        return this.userService.addReview(dto);
     }
 
-    @ApiOperation({ summary: 'Edit comment' })
+    @Patch("reviews/:id")
     @UseGuards(JwtAuthGuard)
     @ApiBearerAuth()
-    @ApiNotFoundResponse({ description: 'Review not found' })
-    @Post('/editReview')
-    @ApiResponse({ status: 201 })
-    editReview(@Body() data: EditReviewDto) {
-        return this.userService.editReview(data);
+    @ApiOperation({ summary: "Edit a review" })
+    @ApiNotFoundResponse({ description: "Review not found" })
+    editReview(@Param("id") id: number, @Body() dto: EditReviewDto) {
+        return this.userService.editReview(dto, id);
     }
 
-    @ApiOperation({ summary: 'Delete comment' })
+    @Delete("reviews/:id")
     @UseGuards(JwtAuthGuard)
     @ApiBearerAuth()
-    @ApiNotFoundResponse({ description: 'Review not found' })
-    @Delete('/deleteReview/:id')
-    @ApiResponse({ status: 201 })
-    deleteReview(@Param('id') id : number, @Req() req : RequestWithUser) {
+    @ApiOperation({ summary: "Delete a review" })
+    @ApiNotFoundResponse({ description: "Review not found" })
+    deleteReview(@Param("id") id: number, @Req() req: RequestWithUser) {
         return this.userService.deleteReview(id, req.userId);
     }
 
-    @ApiOperation({ summary: 'Update reply to comment from recipient. If you want to delete reply, set reply = null' })
+    @Patch("reviews/:id/reply")
     @UseGuards(JwtAuthGuard)
     @ApiBearerAuth()
-    @ApiNotFoundResponse({ description: 'Review not found' })
-    @Post('/updateReviewReply')
-    @ApiResponse({ status: 201 })
-    updateReviewReply(@Body() data: ReplyToReviewDto) {
-        return this.userService.updateReviewReply(data);
+    @ApiOperation({ summary: "Update reply to a review" })
+    @ApiNotFoundResponse({ description: "Review not found" })
+    updateReviewReply(@Param("id") id: number, @Body() dto: ReplyToReviewDto) {
+        return this.userService.updateReviewReply(dto, id);
     }
 
-    @ApiOperation({ summary: 'Get all comments by user ID' })
+    @Get("reviews/:userId")
     @UseGuards(JwtAuthGuard)
     @ApiBearerAuth()
-    @Get('/getReviews/:userId')
-    // @ApiResponse({ status: 201, type: ReviewInfo, isArray: true })
-    getReviews(@Param('userId') userId : number, @Req() req : RequestWithUser) {
+    @ApiOperation({ summary: "Get all reviews by user ID" })
+    getReviews(@Param("userId") userId: number, @Req() req: RequestWithUser) {
         return this.userService.getReviews(userId, req.userId);
     }
-
-    
 }

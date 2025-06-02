@@ -1,4 +1,4 @@
-import { Body, Controller, Post, UseGuards, Get, Param, Req, Delete } from '@nestjs/common';
+import { Body, Controller, Post, UseGuards, Get, Param, Req, Delete, Patch } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags, ApiBearerAuth, ApiNotFoundResponse, ApiBadRequestResponse } from "@nestjs/swagger";
 import { ItemService } from './item.service.mjs';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard.mjs';
@@ -13,60 +13,54 @@ import { AddItemDto } from './dto/add-item.dto.mjs';
 import { EditItemDto } from './dto/edit-item.dto.mjs';
 import { editItemInCartDto } from './dto/edit-item-in-cart.dto.mjs';
 
-@ApiTags("Item")
+@ApiTags('Item')
 @Controller('item')
 export class ItemController {
-    constructor(private itemService: ItemService) { }
+    constructor(private itemService: ItemService) {}
 
     @ApiOperation({ summary: 'Add item' })
     @UseGuards(JwtAuthGuard)
     @ApiBearerAuth()
-    // @ApiResponse({ status: 201, type: IdResponse })
-    @Post('/addItem')
+    @Post()
     addItem(@Body() data: AddItemDto) {
         return this.itemService.addItem(data);
     }
 
-    @ApiOperation({ summary: 'Edit user`s item (if the field has not changed, send the old value)' })
+    @ApiOperation({ summary: 'Edit user`s item' })
     @UseGuards(JwtAuthGuard)
     @ApiBearerAuth()
-    @ApiResponse({ status: 201 })
     @ApiNotFoundResponse({ description: 'Item not found' })
-    @Post('/editItem')
-    editItem(@Body() data: EditItemDto) {
-        return this.itemService.editItem(data);
+    @Patch(':itemId')
+    editItem(@Param('itemId') itemId: number, @Body() data: EditItemDto) {
+        return this.itemService.editItem(data, itemId);
     }
 
     @ApiOperation({ summary: 'Get item info' })
-    @ApiResponse({ status: 201 })
     @UseGuards(JwtAuthGuard)
     @ApiBearerAuth()
-    @Get('/getItemInfo/:itemId')
-    async getItemInfo(@Param('itemId') itemId : number) {
+    @Get(':itemId')
+    getItemInfo(@Param('itemId') itemId: number) {
         return this.itemService.getItemInfo(itemId);
     }
 
-    @ApiOperation({ summary: 'archive or unarchive' })
+    @ApiOperation({ summary: 'Archive or unarchive item' })
     @UseGuards(JwtAuthGuard)
     @ApiBearerAuth()
-    @Post('/updateItemActivation')
-    @ApiResponse({ status: 201})
+    @Patch('activation')
     updateItemActivation(@Body() data: updateActivationDto) {
         return this.itemService.updateItemActivation(data);
     }
 
-    @ApiOperation({ summary: 'archive or unarchive' })
+    @ApiOperation({ summary: 'Delete item' })
     @UseGuards(JwtAuthGuard)
     @ApiBearerAuth()
-    @Delete('/deleteItem/:itemId')
-    @ApiResponse({ status: 201})
-    deleteItem(@Param('itemId') itemId : number, @Req() req : RequestWithUser) {
+    @Delete(':itemId')
+    deleteItem(@Param('itemId') itemId: number, @Req() req: RequestWithUser) {
         return this.itemService.deleteItem(itemId, req.userId);
     }
 
-    @ApiOperation({ summary: 'Search cargo' })
-    @ApiResponse({ status: 201 })
-    @Post('/search')
+    @ApiOperation({ summary: 'Search items' })
+    @Post('search')
     search(@Body() data: SearchItemDto) {
         return this.itemService.search(data);
     }
@@ -74,10 +68,7 @@ export class ItemController {
     @ApiOperation({ summary: 'Add or edit product in cart' })
     @UseGuards(JwtAuthGuard)
     @ApiBearerAuth()
-    @ApiResponse({ status: 201 })
-    @ApiBadRequestResponse({ description: 'The amount of itemised product is less than required' })
-    @ApiNotFoundResponse({ description: 'Item not found' })
-    @Post('/updateItemInCart')
+    @Patch('cart')
     updateItemInCart(@Body() data: editItemInCartDto) {
         return this.itemService.updateItemInCart(data);
     }
@@ -85,28 +76,23 @@ export class ItemController {
     @ApiOperation({ summary: 'Delete item from cart by ID' })
     @UseGuards(JwtAuthGuard)
     @ApiBearerAuth()
-    @ApiResponse({ status: 201 })
-    @ApiNotFoundResponse({ description: 'Item in cart is not found' })
-    @Delete('/deleteItemFromCart/:id')
-    deleteItemFromCart(@Param('id') id : number, @Req() req : RequestWithUser) {
+    @Delete('cart/:id')
+    deleteItemFromCart(@Param('id') id: number, @Req() req: RequestWithUser) {
         return this.itemService.deleteItemFromCart(id, req.userId);
     }
 
-    @ApiOperation({ summary: 'Delete item from cart by ID' })
+    @ApiOperation({ summary: 'Get user cart' })
     @UseGuards(JwtAuthGuard)
     @ApiBearerAuth()
-    @ApiResponse({ status: 201 })
-    @ApiNotFoundResponse({ description: 'Item in cart is not found' })
-    @Get('/getCart')
-    getCart(@Req() req : RequestWithUser) {
+    @Get('cart')
+    getCart(@Req() req: RequestWithUser) {
         return this.itemService.getCart(req.userId);
     }
 
-    @ApiOperation({ summary: 'Left a comment' })
+    @ApiOperation({ summary: 'Add comment' })
     @UseGuards(JwtAuthGuard)
     @ApiBearerAuth()
-    // @ApiResponse({ status: 201, type: IdResponse })
-    @Post('/addComment')
+    @Post('comment')
     addComment(@Body() data: AddCommentDto) {
         return this.itemService.addComment(data);
     }
@@ -115,39 +101,34 @@ export class ItemController {
     @UseGuards(JwtAuthGuard)
     @ApiBearerAuth()
     @ApiNotFoundResponse({ description: 'Comment not found' })
-    @Post('/editComment')
-    @ApiResponse({ status: 201 })
-    editComment(@Body() data: EditCommentDto) {
-        return this.itemService.editComment(data);
+    @Patch('comment/:id')
+    editComment(@Param('id') id: number, @Body() data: EditCommentDto) {
+        return this.itemService.editComment(data, id);
     }
 
     @ApiOperation({ summary: 'Delete comment' })
     @UseGuards(JwtAuthGuard)
     @ApiBearerAuth()
     @ApiNotFoundResponse({ description: 'Comment not found' })
-    @Delete('/deleteComment/:id')
-    @ApiResponse({ status: 201 })
-    deleteComment(@Param('id') id : number, @Req() req : RequestWithUser) {
+    @Delete('comment/:id')
+    deleteComment(@Param('id') id: number, @Req() req: RequestWithUser) {
         return this.itemService.deleteComment(id, req.userId);
     }
 
-    @ApiOperation({ summary: 'Update reply to comment from recipient. If you want to delete reply, set reply = null' })
+    @ApiOperation({ summary: 'Update reply to comment from recipient' })
     @UseGuards(JwtAuthGuard)
     @ApiBearerAuth()
     @ApiNotFoundResponse({ description: 'Comment not found' })
-    @Post('/updateCommentReply')
-    @ApiResponse({ status: 201 })
+    @Patch('comment/reply')
     updateCommentReply(@Body() data: ReplyToCommentDto) {
         return this.itemService.updateCommentReply(data);
     }
 
-    @ApiOperation({ summary: 'Get all comments by user ID' })
+    @ApiOperation({ summary: 'Get all comments by item ID' })
     @UseGuards(JwtAuthGuard)
     @ApiBearerAuth()
-    @Get('/getCommentsByItemId/:itemId')
-    // @ApiResponse({ status: 201, type: CommentInfo, isArray: true })
-    getCommentsByItemId(@Param('itemId') itemId : number) {
+    @Get(':itemId/comments')
+    getCommentsByItemId(@Param('itemId') itemId: number) {
         return this.itemService.getCommentsByItemId(itemId);
     }
-
 }
