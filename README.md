@@ -73,7 +73,7 @@ http://localhost:3000/api/docs
 ```
 
 ## 📂 Структура проекта (упрощённо)
-
+```
 src/
 ├── auth/
 │   ├── auth.controller.mts
@@ -96,4 +96,5 @@ src/
 ├── Common/
 └── app.module.ts
 index.ts
+```
 
