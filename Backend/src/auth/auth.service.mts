@@ -45,7 +45,7 @@ export class AuthService {
 
     private async generateUserToken(user: User) {
         const { country, currency } = await this.userService.getCountryAndCurrencyById(user.countryId);
-        const payload = { id: user.id, country, currency };
+        const payload = { id: user.id, country, currency, role: 'user' };
         return { token: this.jwtService.sign(payload) };
     }
 

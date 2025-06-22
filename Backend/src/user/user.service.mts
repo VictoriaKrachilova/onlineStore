@@ -127,16 +127,10 @@ export class UserService {
     }
 
     async updateProfile(data : UpdateProfileDto) {
-        const countryId = (await this.countriesRepository.findOne({ where: { alpha2: data.country }, include: { all: true } }))?.toJSON()?.id;
-        if (!countryId) throw new HttpException('Country not found', HttpStatus.NOT_FOUND); 
-        const [ updatedRows ] = await this.userRepository.update({
-            name: data.name,
-            storeName: data.storeName,
-            countryId,
-            defaultPaymentType: data.defaultPaymentType,
-            defaultDeliveryWays: data.defaultDeliveryWays,
-        }, { where: { id: data.user.id } });
-        if (!updatedRows) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+        const user = (await this.userRepository.findOne({ where: { id: data.user.id, isVisible: true } }))?.toJSON();
+        if (!user) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+        Object.assign(user, data);
+        await this.userRepository.update(user, { where: { id: data.user.id } });
         return { status: "ok" };
     }
 

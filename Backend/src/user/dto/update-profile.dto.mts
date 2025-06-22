@@ -4,23 +4,22 @@ import { DeliveryWays, Location, PaymentTypes, user } from "../../Common/newType
 
 export class UpdateProfileDto {
 
-    @ApiProperty({ example: 'Jon Scot', description: 'name' })
+    @ApiProperty({ example: 'Jon Scot', description: 'name', required: false })
     @IsString()
+    @IsOptional()
     readonly name!: string;
 
-    @ApiProperty({ example: 'AMPARO', description: 'store name' })
+    @ApiProperty({ example: 'AMPARO', description: 'store name', required: false })
     @IsString()
     @IsOptional()
     readonly storeName?: string;
 
-    @ApiProperty({ example: 'UA', description: 'User country' })
-    @IsString()
-    readonly country!: string;
-
-    @ApiProperty({ example: PaymentTypes.cashless, description: 'payment types', enum: PaymentTypes })
+    @ApiProperty({ example: PaymentTypes.cashless, description: 'payment types', enum: PaymentTypes, required: false })
+    @IsOptional()
     defaultPaymentType!: PaymentTypes;
 
-    @ApiProperty({ example: [ DeliveryWays.ups ], description: 'payment types', isArray: true, enum: DeliveryWays })
+    @ApiProperty({ example: [ DeliveryWays.ups ], description: 'payment types', isArray: true, enum: DeliveryWays, required: false })
+    @IsOptional()
     defaultDeliveryWays!: Array<DeliveryWays>;
 
     user!: user;

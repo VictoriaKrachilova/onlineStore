@@ -10,6 +10,8 @@ import { AddReviewDto } from './dto/add-review.dto.mjs';
 import { EditReviewDto } from './dto/edit-review.dto.mjs';
 import { ReplyToReviewDto } from './dto/reply-to-review.dto.mjs';
 import { RequestWithUser } from '../Common/newTypes.mjs';
+import { RolesGuard } from '../auth/roles.guard.mjs';
+import { Roles } from 'src/auth/roles.decorator.mjs';
 
 @ApiTags("User")
 @Controller("user")
@@ -29,7 +31,8 @@ export class UserController {
     }
 
     @Get("profile")
-    @UseGuards(JwtAuthGuard)
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles('user')
     @ApiBearerAuth()
     @ApiOperation({ summary: "Get user's profile" })
     @ApiNotFoundResponse({ description: "User not found" })
