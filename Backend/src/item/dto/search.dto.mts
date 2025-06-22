@@ -1,6 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IsString, IsNumber, IsOptional } from "class-validator";
-import { Categories, Location, Subcategories, user } from "../../Common/newTypes.mjs";
+import { Categories, Location, user } from "../../Common/newTypes.mjs";
 
 export class SearchItemDto {
 
@@ -32,9 +32,6 @@ export class SearchItemDto {
 
     @ApiProperty({ example: [ Categories.vehicles ], description: 'category', enum: Categories, isArray: true})
     categories!: Array<string>;
-
-    @ApiProperty({ example: [ Subcategories.cars ], description: 'subcategory', enum: Subcategories, isArray: true })
-    subcategories!: Array<string>;
 
     @ApiProperty({ example: { brand: "BMW" }, description: 'all info from category filter' })
     filter!: JSON;

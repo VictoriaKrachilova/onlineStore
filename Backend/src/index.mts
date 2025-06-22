@@ -1,7 +1,7 @@
-import { conf } from "./src/conf.mjs";
+import { conf } from "./conf.mjs";
 import { NestFactory } from "@nestjs/core";
 import { ValidationPipe } from '@nestjs/common';
-import { AppModule } from "./src/app.module.mjs";
+import { AppModule } from "./app.module.mjs";
 import * as requestIp from 'request-ip';
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger"
 import { join, dirname } from "path";

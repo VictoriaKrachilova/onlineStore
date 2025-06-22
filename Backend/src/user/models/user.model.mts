@@ -2,6 +2,7 @@ import { Column, DataType, Model, Table, ForeignKey, BelongsTo, HasMany} from "s
 import { ApiProperty } from "@nestjs/swagger";
 import { Countries } from "./countries.model.mjs";
 import { DeliveryWays, PaymentTypes } from "../../Common/newTypes.mjs";
+import { Item } from "../../item/models/item.model.mjs";
 
 
 interface UserCreationAttrs {
@@ -90,4 +91,7 @@ export class User extends Model<User, UserCreationAttrs> {
 
     @BelongsTo(() => Countries)
     country!: Countries;
+
+    @HasMany(() => Item)
+    items?: Item[];    
 }

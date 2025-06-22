@@ -11,7 +11,7 @@ import { EditReviewDto } from './dto/edit-review.dto.mjs';
 import { ReplyToReviewDto } from './dto/reply-to-review.dto.mjs';
 import { RequestWithUser } from '../Common/newTypes.mjs';
 import { RolesGuard } from '../auth/roles.guard.mjs';
-import { Roles } from 'src/auth/roles.decorator.mjs';
+import { Roles } from '../auth/roles.decorator.mjs';
 
 @ApiTags("User")
 @Controller("user")
@@ -36,12 +36,13 @@ export class UserController {
     @ApiBearerAuth()
     @ApiOperation({ summary: "Get user's profile" })
     @ApiNotFoundResponse({ description: "User not found" })
-    getProfile(@Param("userId") userId: number) {
-        return this.userService.getProfile(userId);
+    getProfile(@Req() req: RequestWithUser) {
+        return this.userService.getProfile(req.userId);
     }
 
     @Patch("profile")
-    @UseGuards(JwtAuthGuard)
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles('user')
     @ApiBearerAuth()
     @ApiOperation({ summary: "Update user's profile" })
     @ApiNotFoundResponse({ description: "User not found" })
@@ -51,7 +52,8 @@ export class UserController {
     }
 
     @Patch("contact-phones")
-    @UseGuards(JwtAuthGuard)
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles('user')
     @ApiBearerAuth()
     @ApiOperation({ summary: "Update contact phones" })
     @ApiNotFoundResponse({ description: "User not found" })
@@ -60,7 +62,8 @@ export class UserController {
     }
 
     @Patch("email")
-    @UseGuards(JwtAuthGuard)
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles('user')
     @ApiBearerAuth()
     @ApiOperation({ summary: "Change email" })
     @ApiNotFoundResponse({ description: "User not found" })
@@ -69,7 +72,8 @@ export class UserController {
     }
 
     @Post("reviews")
-    @UseGuards(JwtAuthGuard)
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles('user')
     @ApiBearerAuth()
     @ApiOperation({ summary: "Add a review" })
     addReview(@Body() dto: AddReviewDto) {
@@ -77,7 +81,8 @@ export class UserController {
     }
 
     @Patch("reviews/:id")
-    @UseGuards(JwtAuthGuard)
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles('user')
     @ApiBearerAuth()
     @ApiOperation({ summary: "Edit a review" })
     @ApiNotFoundResponse({ description: "Review not found" })
@@ -86,7 +91,8 @@ export class UserController {
     }
 
     @Delete("reviews/:id")
-    @UseGuards(JwtAuthGuard)
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles('user')
     @ApiBearerAuth()
     @ApiOperation({ summary: "Delete a review" })
     @ApiNotFoundResponse({ description: "Review not found" })
@@ -95,7 +101,8 @@ export class UserController {
     }
 
     @Patch("reviews/:id/reply")
-    @UseGuards(JwtAuthGuard)
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles('user')
     @ApiBearerAuth()
     @ApiOperation({ summary: "Update reply to a review" })
     @ApiNotFoundResponse({ description: "Review not found" })
@@ -104,7 +111,8 @@ export class UserController {
     }
 
     @Get("reviews/:userId")
-    @UseGuards(JwtAuthGuard)
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles('user')
     @ApiBearerAuth()
     @ApiOperation({ summary: "Get all reviews by user ID" })
     getReviews(@Param("userId") userId: number, @Req() req: RequestWithUser) {

@@ -2,6 +2,7 @@ import { Column, DataType, Model, Table, ForeignKey, BelongsTo} from "sequelize-
 import { ApiProperty } from "@nestjs/swagger";
 import { Categories, DeliveryWays, Location, PaymentTypes } from "../../Common/newTypes.mjs";
 import { User } from "../../user/models/user.model.mjs";
+import { NonAttribute } from "sequelize";
 
 
 interface ItemCreationAttrs {
@@ -84,6 +85,6 @@ export class Item extends Model<Item, ItemCreationAttrs> {
   @Column({ type: DataType.BIGINT, allowNull: false, defaultValue: () => Date.now() })
   created!: number;
 
-  @BelongsTo(() => User)
-  user!: User;
+  @BelongsTo(() => User, { onDelete: 'CASCADE' })
+  user!: NonAttribute<User>;
 }
