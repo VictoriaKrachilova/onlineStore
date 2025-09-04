@@ -5,7 +5,12 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "npx tsc",
-    "dev": "npx tsc && node dist/index.mjs"
+    "dev": "npx tsc && node dist/index.mjs",
+    "docker:up": "docker compose up --build",
+    "docker:up:detached": "docker compose up -d --build",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f backend",
+    "docker:ps": "docker ps"
   },
   "author": "",
   "license": "ISC",

@@ -1,8 +1,11 @@
 
 import { createClient } from 'redis';
+import { conf } from '../conf.mjs';
 
 const redisClient = createClient({
     socket: {
+        host: conf.redis.host || 'localhost',
+        port: conf.redis.port || 6379,
         connectTimeout: 10000,
         reconnectStrategy: (retries) => {
             console.log(`retry ${retries}`);

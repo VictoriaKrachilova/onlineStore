@@ -1,0 +1,76 @@
+version: "3.9"                       # Версия синтаксиса docker-compose
+
+services:                            # Описываем контейнеры (сервисы)
+  backend:                           # 1) NestJS бекенд
+    build: .                         # Собираем образ из Dockerfile в корне проекта
+    container_name: online-store-backend
+    restart: unless-stopped          # Перезапускать, если упал/перезагружается докер
+    ports:
+      - "4554:4554"                  # Пробрасываем порт: хост:контейнер
+    volumes:
+      - .:/app                       # Монтируем исходники для live-reload (nodemon)
+      - /app/node_modules            # Трюк: оставляем node_modules внутри контейнера
+    depends_on:                      # Бекенд стартует после зависимостей
+      - postgres
+      - mongo
+      - elastic
+      - redis
+    environment:                     # Переменные окружения для твоего приложения
+      NODE_ENV: development
+      API_PORT: 4554
+      POSTGRES_HOST: postgres        # Внутри сети доступ по имени сервиса
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_DB: onlineStore
+      MONGO_HOST: mongo
+      MONGO_PORT: 27017
+      ELASTIC_URL: http://elastic:9200
+
+  postgres:                          # 2) PostgreSQL
+    image: postgres:16               # Готовый официальный образ
+    container_name: online-store-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"                  # Доступ к БД с хоста (pgAdmin, psql и т.д.)
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_DB: onlineStore
+    volumes:
+      - postgres_data:/var/lib/postgresql/data  # Данные БД сохраняются в volume
+
+  mongo:                             # 3) MongoDB
+    image: mongo:6
+    container_name: online-store-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"                # Доступ с хоста (MongoDB Compass, mongosh)
+    volumes:
+      - mongo_data:/data/db          # Персистентные данные
+
+  elastic:                           # 4) Elasticsearch (dev-режим, без безопасности)
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.0
+    container_name: online-store-elastic
+    environment:
+      - discovery.type=single-node   # Один узел, кластер не нужен
+      - xpack.security.enabled=false # Отключаем security для локальной разработки
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m # Лимит по памяти JVM
+    ports:
+      - "9200:9200"                  # REST API ES (Kibana/клиенты/браузер)
+    volumes:
+      - elastic_data:/usr/share/elasticsearch/data # Храним индексы
+  redis:
+    image: redis:7-alpine
+    container_name: online-store-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+volumes:                             # Описание именованных томов (персистентное хранилище)
+  postgres_data:
+  mongo_data:
+  elastic_data:
+  redis_data:

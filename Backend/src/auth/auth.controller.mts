@@ -34,7 +34,7 @@ export class AuthController {
     }
 
     @ApiOperation({ summary: 'Confirm email' })
-    @Post('/confirmEmail')
+    @Post('/confirm-email')
     @ApiBadRequestResponse({ status: 400, description: 'User with this email exists' })
     @ApiResponse({status: 201, type: LoginResponseDto})
     confirmEmail(@Body() data: ConfirmEmailDto) {
@@ -47,7 +47,7 @@ export class AuthController {
     @ApiNotFoundResponse({ description: 'User not found' })
     @UseGuards(JwtAuthGuard)
     @ApiBearerAuth()
-    @Post('/changePassword')
+    @Post('/change-password')
     changePassword(@Body() data: ChangePasswordDto) {
         return this.authService.changePassword(data);
     }
@@ -55,7 +55,7 @@ export class AuthController {
     @ApiOperation({ summary: 'Set new password after the user clicked on the link in the email' })
     @ApiResponse({ status: 201 })
     @ApiBadRequestResponse({ status: 401, description: 'Incorrect password' })
-    @Post('/setNewPassword')
+    @Post('/set-new-password')
     setNewPassword(@Body() data: SetNewPasswordDto) {
         return this.authService.setNewPassword(data);
     }
